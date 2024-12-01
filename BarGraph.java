@@ -13,7 +13,7 @@ public class BarGraph extends JFrame {
     private JTextField[] incomeFields; // Changed from savingsFields to incomeFields
     private JButton generateGraphButton;
 
-    public MonthlyFinanceApp() {
+    public BarGraph() {
         setTitle("Monthly Finance Tracker");
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
