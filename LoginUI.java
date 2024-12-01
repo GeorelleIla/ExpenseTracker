@@ -4,9 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class LoginUI extends JFrame{
-	private static final long serialVersionUID = 1L;
-	public JFrame frame; // public for logout purposes
-    private JTextField userField, passField;
+    private static final long serialVersionUID = 1L;
+    public JFrame frame;
+    private JTextField userField;
+    private JPasswordField passField; // Change to JPasswordField
     private JButton loginButton, signinButton;
     private UserAccount userAccount; // Instance of UserAccount to manage users
 
@@ -32,6 +33,7 @@ public class LoginUI extends JFrame{
     public LoginUI() {
         userAccount = new UserAccount(); // Initialize UserAccount
         initialize();
+        frame.setVisible(true); 
     }
 
     /**
@@ -39,6 +41,7 @@ public class LoginUI extends JFrame{
      */
     private void initialize() {
         frame = new JFrame();
+        frame.setBackground(new Color(0, 0, 160));
         frame.setTitle("Expense Insight");
         frame.setBounds(100, 100, 350, 300);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -46,21 +49,28 @@ public class LoginUI extends JFrame{
 
         // Create a label for the title and set a large font
         JLabel titleLabel = new JLabel("EXPENSE INSIGHT");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24)); // Set font size and style
+        titleLabel.setBackground(new Color(0, 0, 160));
+        titleLabel.setFont(new Font("Sitka Display", Font.BOLD | Font.ITALIC, 24)); // Set font size and style
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER); // Center the label
 
         // Initialize buttons and text fields
         loginButton = new JButton("Log In");
+        loginButton.setBackground(new Color(173, 216, 230));
         signinButton = new JButton("Sign In");
+        signinButton.setBackground(new Color(176, 224, 230));
         userField = new JTextField(20); // Set width of text field
 
         // Use GridLayout for aligning labels and text fields
         JPanel userInputField = new JPanel(); 
-        userInputField.add(new JLabel("Username:"));
+        userInputField.setBackground(new Color(0, 128, 128));
+        JLabel label = new JLabel("Username:");
+        label.setForeground(new Color(255, 255, 255));
+        userInputField.add(label);
         userInputField.add(userField);
 
         // Create a panel for the buttons
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(0, 128, 128));
         buttonPanel.setLayout(new FlowLayout()); // Align buttons horizontally
         buttonPanel.add(loginButton);
         buttonPanel.add(signinButton);
@@ -69,11 +79,15 @@ public class LoginUI extends JFrame{
         JPanel contentPanel = new JPanel(new BorderLayout());
         contentPanel.add(titleLabel, BorderLayout.NORTH); // Add title label to the top
         contentPanel.add(userInputField, BorderLayout.CENTER);
-        passField = new JTextField(20); // Set width of text field
+        
+        passField = new JPasswordField(20); // Change to JPasswordField
         
         JPanel passInputField = new JPanel();
+        passInputField.setBackground(new Color(0, 128, 128));
         userInputField.add(passInputField);
-        passInputField.add(new JLabel("Password:"));
+        JLabel label_1 = new JLabel("Password:");
+        label_1.setForeground(new Color(255, 255, 255));
+        passInputField.add(label_1);
         passInputField.add(passField);
 
         // Add components to the frame
@@ -89,7 +103,7 @@ public class LoginUI extends JFrame{
         
         signinButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                registerUser ();
+                registerUser  ();
             }
         });
     }
@@ -97,7 +111,7 @@ public class LoginUI extends JFrame{
     // checks the username and password if it is in the database
     public void userChecker() {
         String username = userField.getText().trim(); // Get username and trim whitespace
-        String password = passField.getText().trim(); // Get password and trim whitespace
+        String password = new String(passField.getPassword()).trim(); // Get password from JPasswordField
 
         // Check for empty fields
         if (username.isEmpty() || password.isEmpty()) {
@@ -106,7 +120,7 @@ public class LoginUI extends JFrame{
         }
 
         // Call login method from UserAccount
-        if (userAccount.login(username, password)) {
+        if (UserAccount.authenticate(username, password)) {
             JOptionPane.showMessageDialog(frame, "Login successful!");
             
             // Create and show ExpenseInsight application
@@ -124,7 +138,7 @@ public class LoginUI extends JFrame{
     // registers a new user into the database
     public void registerUser () {
         String username = userField.getText().trim(); // Get username and trim whitespace
-        String password = passField.getText().trim(); // Get password and trim whitespace
+        String password = new String(passField.getPassword()).trim(); // Get password from JPasswordField
         
         // Check for empty fields
         if (username.isEmpty() || password.isEmpty()) {
@@ -133,7 +147,7 @@ public class LoginUI extends JFrame{
         }
 
         // Call create account method in UserAccount
-        if (userAccount.createAccount(username, password)) {
+        if (userAccount.save(username, password)) {
             JOptionPane.showMessageDialog(frame, "Account created successfully !");
             // Optionally, clear the text fields after registration
             userField.setText("");
