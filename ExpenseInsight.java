@@ -134,7 +134,11 @@ public class ExpenseInsight extends JFrame {
         getContentPane().add(calendarPanel, BorderLayout.CENTER);
 
         annualReportButton.addActionListener(e -> {
-        	// call annual report
+            SwingUtilities.invokeLater(() -> {
+                // Create and display the BarGraph for the annual report, still asks for manual values but properley calls the file naman 
+                BarGraph barGraph = new BarGraph();
+                barGraph.setVisible(true);
+            });
         });
         
         // Set up action listeners for navigation buttons
