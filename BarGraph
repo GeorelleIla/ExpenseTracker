@@ -1,0 +1,189 @@
+import javax.swing.*;
+import java.awt.*;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.chart.renderer.category.BarRenderer;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap; 
+import java.sql.*;
+
+public class BarGraph extends JFrame {
+
+    private static final long serialVersionUID = 1L;
+    private Map<String, Integer> monthlyExpenses;
+    private Map<String, Integer> monthlyIncome;
+
+    public BarGraph(Map<String, Integer> monthlyExpenses, Map<String, Integer> monthlyIncome) {
+        this.monthlyExpenses = monthlyExpenses;
+        this.monthlyIncome = monthlyIncome;
+
+        setTitle("Monthly Finance Tracker");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Generate bar graph with the provided data
+        generateBarGraph();
+    }
+
+    private String getMonthName(int monthIndex) {
+        return new java.text.DateFormatSymbols().getMonths()[monthIndex];
+    }
+
+    private void generateBarGraph() {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        double totalExpenses = 0;
+        double totalIncome = 0;
+
+        // List of months in correct order (January to December)
+        List<String> months = new ArrayList<>();
+        Collections.addAll(months, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+
+        // Loop through sorted months and add data
+        for (String month : months) {
+            double expense = monthlyExpenses.getOrDefault(month, 0);
+            double income = monthlyIncome.getOrDefault(month, 0);
+
+            dataset.addValue(expense, "Expenses", month);
+            dataset.addValue(income, "Income", month);
+
+            totalExpenses += expense;
+            totalIncome += income;
+
+            // Add saved amount (income - expense)
+            double saved = income - expense;
+            dataset.addValue(saved, "Saved", month);
+        }
+
+        // Calculate total savings
+        double totalSavings = totalIncome - totalExpenses;
+
+        // Create the bar chart
+        JFreeChart chart = ChartFactory.createBarChart(
+                "2024 Finance Report",  // Title
+                "Month",                // X-axis label
+                "Amount",               // Y-axis label
+                dataset,                // Dataset
+                PlotOrientation.VERTICAL,
+                true,                   // Include legend
+                true,                   // Tooltips
+                false                   // URLs
+        );
+
+        // Customizing the background color of the plot
+        Plot plot = chart.getPlot();
+        plot.setBackgroundPaint(Color.WHITE);  // Change the background color of the plot area
+
+        // Customizing the chart background color
+        chart.setBackgroundPaint(new Color(172, 217, 230));  // Light gray background
+
+        // Customizing the colors of the bars
+        CategoryPlot categoryPlot = chart.getCategoryPlot();
+        BarRenderer renderer = (BarRenderer) categoryPlot.getRenderer();
+
+        // Set colors for each series (Expenses, Income, Saved)
+        renderer.setSeriesPaint(0, new Color(254, 214, 0));  // Red for Expenses
+        renderer.setSeriesPaint(1, new Color(0, 128, 128)); // Steel Blue for Income
+        renderer.setSeriesPaint(2, new Color(34, 139, 34));  // Forest Green for Saved
+
+        // Chart panel
+        ChartPanel chartPanel = new ChartPanel(chart);
+
+        // Panel for totals (expenses, income, savings)
+        JPanel totalPanel = new JPanel();
+        totalPanel.setLayout(new GridLayout(1, 3)); // 3 columns layout
+        totalPanel.add(new JLabel("Total Expenses: " + String.format("%.2f", totalExpenses)));
+        totalPanel.add(new JLabel("Total Income: " + String.format("%.2f", totalIncome)));
+        totalPanel.add(new JLabel("Total Savings: " + String.format("%.2f", totalSavings)));
+
+        // Add total panel and chart to the main frame
+        add(totalPanel, BorderLayout.NORTH);
+        add(chartPanel, BorderLayout.CENTER);
+    }
+
+    public static void main(String[] args) {
+        // Predefined data for expenses and income
+        Map<String, Integer> expenses = new HashMap<>();
+        Map<String, Integer> income = new HashMap <>();
+
+        
+        // Hardcoded data for demonstration
+        expenses.put("Jan", 500);
+        expenses.put("Feb", 300);
+        expenses.put("Mar", 400);
+        expenses.put("Apr", 450);
+        expenses.put("May", 600);
+        expenses.put("Jun", 350);
+        expenses.put("Jul", 700);
+        expenses.put("Aug", 800);
+        expenses.put("Sep", 650);
+        expenses.put("Oct", 500);
+        expenses.put("Nov", 400);
+        expenses.put("Dec", 300);
+
+        income.put("Jan", 1000);
+        income.put("Feb", 800);
+        income.put("Mar", 900);
+        income.put("Apr", 950);
+        income.put("May", 1200);
+        income.put("Jun", 1100);
+        income.put("Jul", 1300);
+        income.put("Aug", 1400);
+        income.put("Sep", 1250);
+        income.put("Oct", 1150);
+        income.put("Nov", 1050);
+        income.put("Dec", 950);
+
+        // Fetch data from the database if available
+        if (isDatabaseAvailable("jdbc:mysql://localhost:3306/finance_db", "root", "password")) {
+            expenses = fetchData("expenses");
+            income = fetchData("income");
+        } else {
+            System.out.println("No database found. Using hardcoded data...");
+        }
+
+        // Create the BarGraph with the data
+        BarGraph barGraph = new BarGraph(expenses, income);
+        barGraph.setVisible(true);
+    }
+
+    // Method to check if the database is available
+    public static boolean isDatabaseAvailable(String dbUrl, String user, String password) {
+        try (Connection connection = DriverManager.getConnection(dbUrl, user, password)) {
+            return connection != null;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    // Method to fetch data from the database
+    public static Map<String, Integer> fetchData(String tableName) {
+        Map<String, Integer> dataMap = new HashMap<>();
+        String query = "SELECT month, amount FROM " + tableName;
+
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/finance_db", "root", "password");
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            while (rs.next()) {
+                String month = rs.getString("month");
+                int amount = rs.getInt("amount");
+                dataMap.put(month, amount);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return dataMap;
+    }
+}
+
